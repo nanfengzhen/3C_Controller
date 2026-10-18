@@ -11,6 +11,7 @@ public enum StateType
     SprintJump,
     Dash,
     Landing,
+    LandingBuffer,
 }
 
 public class PlayerStateType:Singleton<PlayerStateType>

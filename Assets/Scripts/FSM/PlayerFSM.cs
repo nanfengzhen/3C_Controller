@@ -17,7 +17,7 @@ public class PlayerFSM:Singleton<PlayerFSM>
     {
         if (states.ContainsKey(stateType))
         {
-            //Debug.Log("ÒÑÓĞ¸Ã×´Ì¬");
+            //Debug.Log("å·²æœ‰è¯¥çŠ¶æ€");
 
         }
         else
@@ -28,14 +28,25 @@ public class PlayerFSM:Singleton<PlayerFSM>
 
     public void SetState(StateType nextStateType)
     {
+        if (!states.TryGetValue(nextStateType, out var nextState))
+        {
+            Debug.LogError($"Player state is not registered: {nextStateType}");
+            return;
+        }
+
+        if (playerCurState == nextState)
+        {
+            return;
+        }
+
         DevelopmentToos.WTF(playerCurState + "->" + nextStateType);
         playerCurState?.OnExit();
-        playerCurState = states[nextStateType];
+        playerCurState = nextState;
         playerCurState.OnEnter();
     }
 
     /// <summary>
-    /// ¸ºÔğ¸÷¸ö×´Ì¬ÖĞÒª¸üĞÂµÄ¶«Î÷
+    /// è´Ÿè´£å„ä¸ªçŠ¶æ€ä¸­è¦æ›´æ–°çš„ä¸œè¥¿
     /// </summary>
     public void OnTink()
     {

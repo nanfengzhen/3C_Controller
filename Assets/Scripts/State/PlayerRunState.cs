@@ -11,9 +11,10 @@ public class PlayerRunState :PlayerStateBase
 
     public override void OnEnter()
     {
+        movementController.EnterState(StateType.Run);
 
-        movementController.animator.CrossFade("行走动画", 0.25f, 0, 0);
-        movementController.animator.CrossFade("行走动画物理", 0.25f, 1, 0);
+        movementController.animator.CrossFade("琛岃蛋鍔ㄧ敾", 0.25f, 0, 0);
+        movementController.animator.CrossFade("琛岃蛋鍔ㄧ敾鐗╃悊", 0.25f, 1, 0);
 
         
         
@@ -22,7 +23,7 @@ public class PlayerRunState :PlayerStateBase
 
     public override void OnExit()
     {
-
+        movementController.ExitState(StateType.Run);
     }
 
 
@@ -32,31 +33,39 @@ public class PlayerRunState :PlayerStateBase
         if (PlayerInputManager.MainInstance._attack)
         {
             PlayerFSM.MainInstance.SetState(StateType.Attack);
+            return;
         }
         if(!movementController.isGround && movementController.characterHeight>1f)
         {
             PlayerFSM.MainInstance.SetState(StateType.Landing);
+            return;
         }
-        if (movementController.animator.GetBool("HasInput"))
+        if (movementController.HasMoveInput)
         {
 
             if (movementController.isWalk)
             {
-                PlayerFSM.MainInstance.SetState(StateType.Walk);
                 if (movementController.CanJump() && PlayerInputManager.MainInstance._jump)
                 {
                     PlayerFSM.MainInstance.SetState(StateType.WalkJump);
                 }
+                else
+                {
+                    PlayerFSM.MainInstance.SetState(StateType.Walk);
+                }
+                return;
             }
             if (movementController.isDash)
             {
                 PlayerFSM.MainInstance.SetState(StateType.Dash);
+                return;
             }
-            if (movementController.animator.GetBool("IsRun") && !movementController.isDash)
+            if (!movementController.isDash)
             {
                 if (movementController.CanJump() && PlayerInputManager.MainInstance._jump)
                 {
                     PlayerFSM.MainInstance.SetState(StateType.RunJump);
+                    return;
                 }
             }
         }
