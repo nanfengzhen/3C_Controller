@@ -10,13 +10,14 @@ public class PlayerWalkState :PlayerStateBase
 
     public override void OnEnter()
     {
-        movementController.animator.CrossFade("行走动画", 0.25f, 0, 0);
-        movementController.animator.CrossFade("行走动画物理", 0.25f, 1, 0);
+        movementController.EnterState(StateType.Walk);
+        movementController.animator.CrossFade("琛岃蛋鍔ㄧ敾", 0.25f, 0, 0);
+        movementController.animator.CrossFade("琛岃蛋鍔ㄧ敾鐗╃悊", 0.25f, 1, 0);
     }
 
     public override void OnExit()
     {
-        
+        movementController.ExitState(StateType.Walk);
     }
 
 
@@ -25,12 +26,14 @@ public class PlayerWalkState :PlayerStateBase
         if (PlayerInputManager.MainInstance._attack)
         {
             PlayerFSM.MainInstance.SetState(StateType.Attack);
+            return;
         }
         if (!movementController.isGround)
         {
             PlayerFSM.MainInstance.SetState(StateType.Landing);
+            return;
         }
-        if (movementController.animator.GetBool("HasInput"))
+        if (movementController.HasMoveInput)
         {
 
             if (movementController.isWalk)
@@ -38,27 +41,37 @@ public class PlayerWalkState :PlayerStateBase
                 if (movementController.CanJump() && PlayerInputManager.MainInstance._jump)
                 {
                     PlayerFSM.MainInstance.SetState(StateType.WalkJump);
+                    return;
                 }
             }
             if (movementController.isDash)
             {
                 PlayerFSM.MainInstance.SetState(StateType.Dash);
+                return;
             }
             if (movementController.isSprint)
             {
-                PlayerFSM.MainInstance.SetState(StateType.Sprint);
                 if (movementController.CanJump() && PlayerInputManager.MainInstance._jump)
                 {
                     PlayerFSM.MainInstance.SetState(StateType.SprintJump);
                 }
+                else
+                {
+                    PlayerFSM.MainInstance.SetState(StateType.Sprint);
+                }
+                return;
             }
-            if (movementController.animator.GetBool("IsRun"))
+            if (!movementController.isWalk)
             {
-                PlayerFSM.MainInstance.SetState(StateType.Run);
                 if (movementController.CanJump() && PlayerInputManager.MainInstance._jump)
                 {
                     PlayerFSM.MainInstance.SetState(StateType.RunJump);
                 }
+                else
+                {
+                    PlayerFSM.MainInstance.SetState(StateType.Run);
+                }
+                return;
             }
         }
         else

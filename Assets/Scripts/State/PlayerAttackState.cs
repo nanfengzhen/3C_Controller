@@ -16,16 +16,17 @@ public class PlayerAttackState : PlayerStateBase
 
     public override void OnEnter()
     {
+        movementController.EnterState(StateType.Attack);
         comboController.CharacterBaseAttackInput();
 
     }
 
     /// <summary>
-    /// ĞèÒªÇå¿ÕÔÚAttackµÄÒ»Ğ©×´Ì¬
+    /// éœ€è¦æ¸…ç©ºåœ¨Attackçš„ä¸€äº›çŠ¶æ€
     /// </summary>
     public override void OnExit()
     {
-
+        movementController.ExitState(StateType.Attack);
     }
 
 
@@ -35,39 +36,44 @@ public class PlayerAttackState : PlayerStateBase
         
         if (PlayerInputManager.MainInstance._attack || PlayerInputManager.MainInstance.rightAttack)
         {
-            Debug.Log("½øÈë¹¥»÷×´Ì¬");
+            Debug.Log("è¿›å…¥æ”»å‡»çŠ¶æ€");
 
-            PlayerFSM.MainInstance.SetState(StateType.Attack);
+            comboController.CharacterBaseAttackInput();
+            return;
             
         }
 
-        if (movementController.animator.AnimationAtTag("Attack"))
+        if (movementController.animator.AnimationAtTag("Attack") || movementController.animator.IsInTransition(0))
         {
-            movementController.PlayerState = StateType.Attack;
+            return;
         }
 
-
-        
-
-        if (movementController.animator.GetBool("HasInput"))
+        if (movementController.HasMoveInput)
         {
             if (movementController.isWalk)
             {
-                PlayerFSM.MainInstance.SetState(StateType.Walk);
                 if (movementController.CanJump() && PlayerInputManager.MainInstance._jump)
                 {
                     PlayerFSM.MainInstance.SetState(StateType.WalkJump);
                 }
+                else
+                {
+                    PlayerFSM.MainInstance.SetState(StateType.Walk);
+                }
+                return;
             }
             if (movementController.isDash)
             {
                 PlayerFSM.MainInstance.SetState(StateType.Dash);
+                return;
             }
             if (movementController.isSprint)
             {
                 PlayerFSM.MainInstance.SetState(StateType.Sprint);
+                return;
             }
             PlayerFSM.MainInstance.SetState(StateType.Run);
+            return;
         }
         else if (!movementController.animator.AnimationAtTag("Attack"))
         {

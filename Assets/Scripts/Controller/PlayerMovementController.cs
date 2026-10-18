@@ -21,33 +21,39 @@ public class PlayerMovementController :PlayerControllerBase
 
 
 
-    [SerializeField, Header("Íæ¼Ò×´Ì¬")]
+    [SerializeField, Header("ç©å®¶çŠ¶æ€")]
     public StateType PlayerState;
     public bool isDash = false;
     public bool isSprint = false;
     public bool isWalk = false;
 
 
-    [SerializeField, Header("×´Ì¬Ê±¼ä")]
+    [SerializeField, Header("çŠ¶æ€æ—¶é—´")]
     
     private float nextTime;
     [SerializeField]private float walkTime;
     [SerializeField]private float runTime;
     [SerializeField]private float sprintTime;
-    public float keepDashTime = 0.7f;     //ÎªÁË±£Ö¤ÄÜ¹»ÔÚdash×´Ì¬ÒàÄÜ³å´Ì£¬ËùÒÔkeepdashÊ±¼äÉèÖÃ³ÉdashµÄÊ±³¤
+    public float keepDashTime = 0.7f;     //ä¸ºäº†ä¿è¯èƒ½å¤Ÿåœ¨dashçŠ¶æ€äº¦èƒ½å†²åˆºï¼Œæ‰€ä»¥keepdashæ—¶é—´è®¾ç½®æˆdashçš„æ—¶é•¿
     public float currentDashTime = 0;
 
+    [SerializeField, Header("è½åœ°ç¼“å†²")]
+    public float landingBufferDuration = 0.2f;
+    public float landingBufferTimer;
+    public bool isLanded;
 
 
-    [SerializeField, Header("ÌøÔ¾Ïà¹Ø")]
+
+
+    [SerializeField, Header("è·³è·ƒç›¸å…³")]
     public float Feet;
     public float characterHeight;
     private bool isJump;
     [SerializeField]private float fallDeltaTime;
     private float fallTime;
-    public float JumpVelocity;      //×Ô¶¨Òå³õÊ¼ËÙ¶È
+    public float JumpVelocity;      //è‡ªå®šä¹‰åˆå§‹é€Ÿåº¦
 
-    //ÇóË®Æ½³õËÙ¶È
+    //æ±‚æ°´å¹³åˆé€Ÿåº¦
     static readonly int CACHE_SIZE = 3;
     Vector3[] velcache = new Vector3[CACHE_SIZE];
     int currentCacheIndex;
@@ -76,6 +82,7 @@ public class PlayerMovementController :PlayerControllerBase
         PlayerFSM.MainInstance.AddState(StateType.Dash, new PlayerDashState(this, comboController));
         PlayerFSM.MainInstance.AddState(StateType.SprintJump, new PlayerSprintJumpState(this, comboController));
         PlayerFSM.MainInstance.AddState(StateType.Landing, new PlayerLandingState(this, comboController));
+        PlayerFSM.MainInstance.AddState(StateType.LandingBuffer, new PlayerLandingBufferState(this, comboController));
     }
 
 
@@ -91,15 +98,15 @@ public class PlayerMovementController :PlayerControllerBase
     protected override void Update()
     {
         HeightCheck();
-        PlayerFSM.MainInstance.OnTink();
-        GetCurrentState();
-        SetShowWeapon(); 
-        
-
         GroundSearch();
-        PlayerJump();
         CaculateSpeed();
+        SetWalk();
+        SetDash();
+        KeepSprint();
         UpdatePlayerMoveState();
+        PlayerFSM.MainInstance.OnTink();
+        PlayerJump();
+        SetShowWeapon();
         FollowCameraRotation();
        
     }
@@ -119,62 +126,185 @@ public class PlayerMovementController :PlayerControllerBase
         
     }
 
-    #region ³ÖĞøĞÔ¶¯»­¸üĞÂ
+    #region æŒç»­æ€§åŠ¨ç”»æ›´æ–°
 
-    public void ResetState()
+    public bool HasMoveInput => PlayerInputManager.MainInstance._run != Vector2.zero;
+
+    public void EnterState(StateType nextState)
+    {
+        PlayerState = nextState;
+
+        switch (nextState)
+        {
+            case StateType.Idle:
+                ResetMovementFlags();
+                break;
+            case StateType.Walk:
+                isWalk = true;
+                isDash = false;
+                isSprint = false;
+                break;
+            case StateType.Run:
+                ResetMovementFlags();
+                break;
+            case StateType.Sprint:
+                isSprint = true;
+                isDash = false;
+                isWalk = false;
+                break;
+            case StateType.Dash:
+                isDash = true;
+                isSprint = false;
+                isWalk = false;
+                break;
+            case StateType.WalkJump:
+                isWalk = true;
+                isDash = false;
+                isSprint = false;
+                break;
+            case StateType.RunJump:
+                ResetMovementFlags();
+                break;
+            case StateType.SprintJump:
+                isSprint = true;
+                isDash = false;
+                isWalk = false;
+                break;
+            case StateType.Attack:
+                animator.SetBool("IsAttack", true);
+                break;
+            case StateType.Landing:
+                isLanded = false;
+                animator.SetBool("isLanded", false);
+                break;
+            case StateType.LandingBuffer:
+                landingBufferTimer = 0f;
+                isLanded = false;
+                animator.SetBool("isLanded", false);
+                break;
+        }
+
+        SetAnimatorParametersByState(nextState);
+    }
+
+    public void ExitState(StateType leavingState)
+    {
+        switch (leavingState)
+        {
+            case StateType.Walk:
+            case StateType.WalkJump:
+                isWalk = false;
+                break;
+            case StateType.Sprint:
+            case StateType.SprintJump:
+                isSprint = false;
+                break;
+            case StateType.Dash:
+                isDash = false;
+                currentDashTime = 0f;
+                break;
+            case StateType.Attack:
+                animator.SetBool("IsAttack", false);
+                break;
+        }
+    }
+
+    public void SetAnimatorParametersByState(StateType state)
+    {
+        bool hasInput = HasMoveInput;
+        float speed = 0f;
+        bool isRun = false;
+
+        switch (state)
+        {
+            case StateType.Walk:
+            case StateType.WalkJump:
+                speed = 1f;
+                break;
+            case StateType.Run:
+            case StateType.RunJump:
+                speed = 4f;
+                isRun = true;
+                break;
+            case StateType.Sprint:
+            case StateType.SprintJump:
+            case StateType.Dash:
+                speed = 9f;
+                isRun = true;
+                break;
+            case StateType.Attack:
+                animator.SetBool("IsAttack", true);
+                break;
+            case StateType.Landing:
+                isLanded = false;
+                animator.SetBool("isLanded", false);
+                break;
+            case StateType.LandingBuffer:
+                landingBufferTimer = 0f;
+                isLanded = false;
+                animator.SetBool("isLanded", false);
+                break;
+        }
+
+        animator.SetBool("HasInput", hasInput || state == StateType.Walk || state == StateType.Run || state == StateType.Sprint || state == StateType.Dash);
+        animator.SetBool("IsRun", isRun);
+        animator.SetFloat("Speed", speed, 0.2f, Time.deltaTime);
+    }
+
+    public void UpdateLandingBuffer(float deltaTime)
+    {
+        if (isLanded) return;
+        landingBufferTimer += deltaTime;
+        if (landingBufferTimer >= landingBufferDuration)
+        {
+            isLanded = true;
+            animator.SetBool("isLanded", true);
+        }
+    }
+
+    private void ResetMovementFlags()
     {
         isDash = false;
-        isWalk = false;
         isSprint = false;
-        currentDashTime = 0;
+        isWalk = false;
+        currentDashTime = 0f;
     }
+
     private void SetDash()
     {
-        if (PlayerInputManager.MainInstance._sprint)
+        if (PlayerInputManager.MainInstance._sprint && HasMoveInput)
         {
-
             isDash = true;
             isSprint = false;
             isWalk = false;
-            //    //isSprint = !isSprint;
-            //    //if(isSprint) isWalk = false;
-
-            if (currentDashTime <= 0)
+            if (currentDashTime <= 0f)
             {
                 currentDashTime = keepDashTime;
             }
         }
-        else if (!animator.GetBool("HasInput"))
+        else if (!HasMoveInput)
         {
             isDash = false;
             isSprint = false;
-            currentDashTime = keepDashTime;
+            currentDashTime = 0f;
         }
-
-
     }
 
-    //ÊÇ·ñ¼ÌĞø¼á³Ö³å´Ì
-    public void KeepSprint()
+    private void KeepSprint()
     {
-        if (isDash)
+        if (!isDash)
         {
-            currentDashTime -= Time.deltaTime;
-            if (currentDashTime < 0)
-            {
-                isSprint = true;
-                isDash = false;
-                isWalk = false;
-
-            }
+            return;
         }
-        //³å´ÌÌøÔ¾ÂäµØÒÔºó£¬Ò²ÄÜ½øĞĞ³å´Ì
-        if (animator.GetBool("HasInput") && animator.GetCurrentAnimatorStateInfo(0).IsTag("SprintBuffer"))
+
+        currentDashTime -= Time.deltaTime;
+        if (currentDashTime <= 0f && HasMoveInput)
         {
             isSprint = true;
+            isDash = false;
+            isWalk = false;
         }
     }
-
 
     private void SetWalk()
     {
@@ -184,12 +314,6 @@ public class PlayerMovementController :PlayerControllerBase
             isSprint = false;
             isDash = false;
         }
-        if (animator.GetBool("HasInput") && animator.GetCurrentAnimatorStateInfo(0).IsTag("WalkBuffer"))
-        {
-            isWalk = true;
-        }
-
-
     }
 
     private void UpdatePlayerMoveState()
@@ -198,9 +322,6 @@ public class PlayerMovementController :PlayerControllerBase
         if (!isGround) return;
         animator.SetBool("HasInput", PlayerInputManager.MainInstance._run != Vector2.zero);
 
-        SetWalk();
-        SetDash();
-        KeepSprint();
 
         if (animator.GetBool("HasInput"))
         {
@@ -222,13 +343,13 @@ public class PlayerMovementController :PlayerControllerBase
 
            
         }
-        //ËÉ¿ª¼üÅÌ
+        //å†²åˆºè·³è·ƒè½åœ°ä»¥åï¼Œä¹Ÿèƒ½è¿›è¡Œå†²åˆº
         else
         {
             targetSpeed = 0f;
             if (animator.GetFloat("Speed") < 2.5f)
             {
-                animator.SetBool("IsRun", false);//Èç¹ûÉæ¼°runendÓëwalkend£¬½«runµÄÉèÖµ·ÅÔÚspeedÉèÖµµÄºóÃæ
+                animator.SetBool("IsRun", false);//å¦‚æœæ¶‰åŠrunendä¸walkendï¼Œå°†runçš„è®¾å€¼æ”¾åœ¨speedè®¾å€¼çš„åé¢
             }
             animator.SetFloat("Speed", targetSpeed, 0.2f, Time.deltaTime);
 
@@ -268,22 +389,22 @@ public class PlayerMovementController :PlayerControllerBase
     }
 
 
-    #region ¸ß¶ÈÉäÏß¼ì²â
+    #region é«˜åº¦å°„çº¿æ£€æµ‹
     private void HeightCheck()
     {
          if(Physics.Raycast(transform.position, Vector3.down,out hit, whatIsGround))
         {
             characterHeight = hit.distance;
-            //DevelopmentToos.WTF("µ±Ç°µÄ¸ß¶È:" + characterHeight);
+            //DevelopmentToos.WTF("å½“å‰çš„é«˜åº¦:" + characterHeight);
         }
     }
     #endregion
 
 
-    #region µØÃæ¼ì²âºÍÌøÔ¾¼ÆËã
+    #region åœ°é¢æ£€æµ‹å’Œè·³è·ƒè®¡ç®—
     protected void GroundSearch()
     {
-        // 1. ÕıÔÚÌøÔ¾ÉÏÉı½×¶Î
+        // 1. æ­£åœ¨è·³è·ƒä¸Šå‡é˜¶æ®µ
         if (verticalVelocity > 0f)
         {
             isGround = false;
@@ -292,7 +413,7 @@ public class PlayerMovementController :PlayerControllerBase
             return;
         }
 
-        // 2. ÎïÀíÉÏÌùºÏµØÃæ
+        // 2. ç‰©ç†ä¸Šè´´åˆåœ°é¢
         if (GroundCheck())
         {
             isGround = true;
@@ -312,7 +433,7 @@ public class PlayerMovementController :PlayerControllerBase
             }
         }
 
-        // 4. ¸üĞÂ¶¯»­×´Ì¬»ú
+        // 4. æ›´æ–°åŠ¨ç”»çŠ¶æ€æœº
         animator.SetBool("isGround", isGround);
     }
 
@@ -323,12 +444,12 @@ public class PlayerMovementController :PlayerControllerBase
     {
         if (isGround)
         {
-            //ÂäµØÒÔºó£¬ËÙ¶È¹Ì¶¨Îª-2f
+            //è½åœ°ä»¥åï¼Œé€Ÿåº¦å›ºå®šä¸º-2f
 
             verticalVelocity = -2f;
 
         }
-        else //²»ÔÚµØÃæ¾Í¿ªÊ¼ÀÛ¼ÓËÙ¶È
+        else //ä¸åœ¨åœ°é¢å°±å¼€å§‹ç´¯åŠ é€Ÿåº¦
         {
             verticalVelocity += gravity * Time.deltaTime;
         }
@@ -341,9 +462,9 @@ public class PlayerMovementController :PlayerControllerBase
         if (!CanJump()) return;
         if (isGround && PlayerInputManager.MainInstance._jump)
         {
-            //DevelopmentToos.WTF("½øÀ´Ã»");
+            //DevelopmentToos.WTF("è¿›æ¥æ²¡");
             verticalVelocity = JumpVelocity;
-            //²¥·ÅÌøÔ¾¶¯»­
+            //æ’­æ”¾è·³è·ƒåŠ¨ç”»
             isGround = false;
         }
 
@@ -358,7 +479,7 @@ public class PlayerMovementController :PlayerControllerBase
             animator.GetCurrentAnimatorStateInfo(0).IsTag("RunBuffer")  || 
             animator.GetCurrentAnimatorStateInfo(0).IsTag("SprintBuffer"))
         { 
-            if (animator.GetCurrentAnimatorStateInfo(0).normalizedTime < 0.2f)    //»º³åÊ±¼äÎª0.5f
+            if (animator.GetCurrentAnimatorStateInfo(0).normalizedTime < 0.2f)    //ç¼“å†²æ—¶é—´ä¸º0.5f
             {
                 return false;
             }
@@ -377,7 +498,7 @@ public class PlayerMovementController :PlayerControllerBase
             || animator.GetCurrentAnimatorStateInfo(0).IsTag("RunBuffer")
             || animator.GetCurrentAnimatorStateInfo(0).IsTag("SprintBuffer"))
         {
-            if (animator.GetCurrentAnimatorStateInfo(0).normalizedTime > 0.15f)    //»º³åÊ±¼äÎª0.5f
+            if (animator.GetCurrentAnimatorStateInfo(0).normalizedTime > 0.15f)    //ç¼“å†²æ—¶é—´ä¸º0.5f
             {
                 return true;
             }
@@ -388,7 +509,7 @@ public class PlayerMovementController :PlayerControllerBase
 
     #endregion
 
-    #region ²¥·ÅÉùÒô
+    #region æ’­æ”¾å£°éŸ³
     public void PlayFootSound()
     {
         if (animator.GetFloat("Speed") > 0.1f && animator.GetCurrentAnimatorStateInfo(0).IsTag("Move"))
@@ -438,10 +559,10 @@ public class PlayerMovementController :PlayerControllerBase
     {
 
         Vector3 playerDeltaMovement = Vector3.zero;
-        //½«½Å±¾Àï¶¨ÒåµÄÏÂÂäËÙ¶ÈÓëÓÎÏ·ÄÚÒ»ÖÂ
-        //if (isGrounded)         //ÔÚµØÃæÉÏ¼ÆËã
+        //å°†è„šæœ¬é‡Œå®šä¹‰çš„ä¸‹è½é€Ÿåº¦ä¸æ¸¸æˆå†…ä¸€è‡´
+        //if (isGrounded)         //åœ¨åœ°é¢ä¸Šè®¡ç®—
         //{
-        //    averageVel = AverageVel(animator.velocity);//½«ÏÂ×¹Ç°×îºóÈıÖ¡µÄË®Æ½·½ÏòÆ½¾ùËÙ¶È×÷ÎªÆ½Å×ÔË¶¯¹ßĞÔ
+        //    averageVel = AverageVel(animator.velocity);//å°†ä¸‹å å‰æœ€åä¸‰å¸§çš„æ°´å¹³æ–¹å‘å¹³å‡é€Ÿåº¦ä½œä¸ºå¹³æŠ›è¿åŠ¨æƒ¯æ€§
             playerDeltaMovement = animator.deltaPosition;
 
         //}
@@ -457,57 +578,7 @@ public class PlayerMovementController :PlayerControllerBase
     }
 
 
-    public void GetCurrentState()
-    {
-        if (animator.AnimationAtTag("Attack"))
-        {
-            PlayerState = StateType.Attack;
-        }
-        if (animator.AnimationAtTag("Move"))
-        {
-            if(animator.GetFloat("Speed") < 1f)
-            {
-                PlayerState = StateType.Walk;
-            }
-            else if(animator.GetBool("IsRun") && animator.GetFloat("Speed") < 8f)
-            {
-                PlayerState = StateType.Run;
-            }
-            else if(animator.GetFloat("Speed") > 8f)
-            {
-                PlayerState = StateType.Sprint;
-            }
-            
-        }
-        if (animator.AnimationAtTag("Jump"))
-        {
-            PlayerState = StateType.Jump;
-        }
-        if (animator.AnimationAtTag("WalkJump"))
-        {
-            PlayerState = StateType.WalkJump;
-        }
-        if (animator.AnimationAtTag("RunJump"))
-        {
-            PlayerState = StateType.RunJump;
-        }
-        if (animator.AnimationAtTag("SprintJump"))
-        {
-            PlayerState = StateType.SprintJump;
-        }
-        if (animator.AnimationAtTag("Dash"))
-        {
-            PlayerState = StateType.Dash;
-        }
-        if(animator.AnimationAtTag("WeaponIdle") || animator.AnimationAtTag("Idle"))
-        {
-            PlayerState = StateType.Idle;
-        }
-        if (animator.AnimationAtTag("Landing") || animator.AnimationAtTag("WalkBuffer") || animator.AnimationAtTag("RunBuffer") || animator.AnimationAtTag("SprintBuffer"))
-        {
-            PlayerState = StateType.Landing;
-        }
-    }
+
 
     public Vector3 AverageVel(Vector3 newvel)
     {

@@ -11,34 +11,50 @@ public class PlayerJumpState : PlayerStateBase
 
     public override void OnEnter()
     {
+        movementController.EnterState(StateType.Jump);
         float randomVal = Random.Range(0, 100);
         float feetVal = (randomVal < 50) ? -1f : 1f;
-        // °ÑÖµ´«¸ø Animator (ÕâÑù²ÎÊý¾ÍÍ¬²½ÁË)
-        movementController.animator.SetFloat("×óÓÒ½Å", feetVal);
+        // æŠŠå€¼ä¼ ç»™ Animator (è¿™æ ·å‚æ•°å°±åŒæ­¥äº†)
+        movementController.animator.SetFloat("å·¦å³è„š", feetVal);
 
-        if (movementController.animator.GetFloat("×óÓÒ½Å") > 0.5f)
+        if (movementController.animator.GetFloat("å·¦å³è„š") > 0.5f)
         {
             movementController.animator.Play("JumpL",0);
         }
-        else if((movementController.animator.GetFloat("×óÓÒ½Å") < - 0.5f))
+        else if((movementController.animator.GetFloat("å·¦å³è„š") < - 0.5f))
         {
             movementController.animator.Play("JumpR",0);
         }
 
-        movementController.animator.Play("ÌøÔ¾",1);
-        //Debug.Log("½øÈëÌøÔ¾×´Ì¬");
+        movementController.animator.Play("è·³è·ƒ",1);
+        //Debug.Log("è¿›å…¥è·³è·ƒçŠ¶æ€");
+    }
+
+    public override void OnExit()
+    {
+        movementController.ExitState(StateType.Jump);
     }
 
 
     public override void OnUpdate()
     {
 
-        //Debug.Log("½øÀ´µÄJump");
+        //Debug.Log("è¿›æ¥çš„Jump");
         
-        if(movementController.PlayerState == StateType.Idle || !movementController.CanJump())
+        if (movementController.isGround)
         {
-            //Debug.Log("³É¹¦ÇÐ»»×´Ì¬");
-            PlayerFSM.MainInstance.SetState(StateType.Idle);
+            if (PlayerInputManager.MainInstance._attack || PlayerInputManager.MainInstance.rightAttack)
+            {
+                PlayerFSM.MainInstance.SetState(StateType.Attack);
+            }
+            else if (movementController.HasMoveInput)
+            {
+                PlayerFSM.MainInstance.SetState(movementController.isWalk ? StateType.Walk : StateType.Run);
+            }
+            else
+            {
+                PlayerFSM.MainInstance.SetState(StateType.Idle);
+            }
         }
         
 

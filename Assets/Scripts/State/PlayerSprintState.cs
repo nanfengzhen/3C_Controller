@@ -10,8 +10,14 @@ public class PlayerSprintState : PlayerStateBase
 
     public override void OnEnter()
     {
-        movementController.animator.CrossFade("ÐÐ×ß¶¯»­", 0.25f, 0, 0);
-        movementController.animator.CrossFade("ÐÐ×ß¶¯»­ÎïÀí", 0.25f, 1, 0);    //Õâ¸ö²¥·Å·½Ê½²»ÄÜÂÖÑ¯´¥·¢£¬·ñÔòÈËÎï¾Í»á¿¨×¡²»¶¯
+        movementController.EnterState(StateType.Sprint);
+        movementController.animator.CrossFade("è¡Œèµ°åŠ¨ç”»", 0.25f, 0, 0);
+        movementController.animator.CrossFade("è¡Œèµ°åŠ¨ç”»ç‰©ç†", 0.25f, 1, 0);    //è¿™ä¸ªæ’­æ”¾æ–¹å¼ä¸èƒ½è½®è¯¢è§¦å‘ï¼Œå¦åˆ™äººç‰©å°±ä¼šå¡ä½ä¸åŠ¨
+    }
+
+    public override void OnExit()
+    {
+        movementController.ExitState(StateType.Sprint);
     }
 
     public override void OnUpdate()
@@ -19,31 +25,39 @@ public class PlayerSprintState : PlayerStateBase
         if (PlayerInputManager.MainInstance._attack)
         {
             PlayerFSM.MainInstance.SetState(StateType.Attack);
+            return;
         }
         if (!movementController.isGround && movementController.characterHeight >1f)
         {
             PlayerFSM.MainInstance.SetState(StateType.Landing);
+            return;
         }
-        if (movementController.animator.GetBool("HasInput"))
+        if (movementController.HasMoveInput)
         {
 
             if (movementController.isWalk)
             {
-                PlayerFSM.MainInstance.SetState(StateType.Walk);
                 if (movementController.CanJump() && PlayerInputManager.MainInstance._jump)
                 {
                     PlayerFSM.MainInstance.SetState(StateType.WalkJump);
                 }
+                else
+                {
+                    PlayerFSM.MainInstance.SetState(StateType.Walk);
+                }
+                return;
             }
             if (movementController.isDash)
             {
                 PlayerFSM.MainInstance.SetState(StateType.Dash);
+                return;
             }
             if (movementController.isSprint)
             {
                 if (movementController.CanJump() && PlayerInputManager.MainInstance._jump)
                 {
                     PlayerFSM.MainInstance.SetState(StateType.SprintJump);
+                    return;
                 }
             }
         }

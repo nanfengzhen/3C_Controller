@@ -11,12 +11,13 @@ public class PlayerIdleState : PlayerStateBase
 
     public override void OnEnter()
     {
+        movementController.EnterState(StateType.Idle);
         movementController.animator.CrossFade("Idle", 0.13f,0,0);
     }
 
     public override void OnExit()
     {
-
+        movementController.ExitState(StateType.Idle);
     }
 
 
@@ -26,26 +27,33 @@ public class PlayerIdleState : PlayerStateBase
         if (PlayerInputManager.MainInstance._attack || PlayerInputManager.MainInstance.rightAttack)
         {
             PlayerFSM.MainInstance.SetState(StateType.Attack);
+            return;
         }
         if (!movementController.isGround && movementController.characterHeight > 2f)
         {
             PlayerFSM.MainInstance.SetState(StateType.Landing);
+            return;
         }
-        if (movementController.animator.GetBool("HasInput"))
+        if (movementController.HasMoveInput)
         {
 
             if (movementController.isWalk)
             {
-                PlayerFSM.MainInstance.SetState(StateType.Walk);
                 if (movementController.CanJump() && PlayerInputManager.MainInstance._jump)
                 {
                     PlayerFSM.MainInstance.SetState(StateType.WalkJump);
                 }
+                else
+                {
+                    PlayerFSM.MainInstance.SetState(StateType.Walk);
+                }
+                return;
             }
 
-            if (movementController.animator.GetBool("IsRun"))
+            if (!movementController.isWalk)
             {
                 PlayerFSM.MainInstance.SetState(StateType.Run);
+                return;
             }
         }
         else

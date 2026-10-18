@@ -10,23 +10,29 @@ public class PlayerWalkJumpState :PlayerStateBase
 
     public override void OnEnter()
     {
-        // 1. ¡¾¹Ø¼üĞŞ¸Ä¡¿ÔÚÕâÀïÖ±½Ó½øĞĞËæ»ú¸³Öµ£¬È·±£ÔÚ²¥·ÅÇ°ÖµÒÑ¾­¸Ä±ä
-        // »òÕßÄã¿ÉÒÔµ÷ÓÃ Player.MainInstance.RandomizeFeet() Èç¹ûÄã°ÑÂß¼­·â×°ÁË
+        movementController.EnterState(StateType.WalkJump);
+        // 1. ã€å…³é”®ä¿®æ”¹ã€‘åœ¨è¿™é‡Œç›´æ¥è¿›è¡Œéšæœºèµ‹å€¼ï¼Œç¡®ä¿åœ¨æ’­æ”¾å‰å€¼å·²ç»æ”¹å˜
+        // æˆ–è€…ä½ å¯ä»¥è°ƒç”¨ Player.MainInstance.RandomizeFeet() å¦‚æœä½ æŠŠé€»è¾‘å°è£…äº†
         float randomVal = UnityEngine.Random.Range(0, 100);
         float feetVal = (randomVal < 50) ? -1f : 1f;
-        // °ÑÖµ´«¸ø Animator (ÕâÑù²ÎÊı¾ÍÍ¬²½ÁË)
-        movementController.animator.SetFloat("×óÓÒ½Å", feetVal);
+        // æŠŠå€¼ä¼ ç»™ Animator (è¿™æ ·å‚æ•°å°±åŒæ­¥äº†)
+        movementController.animator.SetFloat("å·¦å³è„š", feetVal);
 
-        if (movementController.animator.GetFloat("×óÓÒ½Å") > 0.5f)
+        if (movementController.animator.GetFloat("å·¦å³è„š") > 0.5f)
         {
             movementController.animator.Play("WalkJumpL");
         }
-        else if (movementController.animator.GetFloat("×óÓÒ½Å") < -0.5f)
+        else if (movementController.animator.GetFloat("å·¦å³è„š") < -0.5f)
         {
             movementController.animator.Play("WalkJumpR");
         }
         
-        movementController.animator.Play("×ßÂ·ÌøÔ¾");
+        movementController.animator.Play("èµ°è·¯è·³è·ƒ");
+    }
+
+    public override void OnExit()
+    {
+        movementController.ExitState(StateType.WalkJump);
     }
 
 
@@ -36,37 +42,34 @@ public class PlayerWalkJumpState :PlayerStateBase
         if (PlayerInputManager.MainInstance._attack)
         {
             PlayerFSM.MainInstance.SetState(StateType.Attack);
+            return;
         }
-        if (movementController.animator.GetBool("HasInput"))
+        if (!movementController.isGround)
+        {
+            return;
+        }
+        if (movementController.HasMoveInput)
         {
 
             if (movementController.LoadingBufferTime() && movementController.isGround && movementController.isWalk)
             {
                 PlayerFSM.MainInstance.SetState(StateType.Walk);
-                if (movementController.CanJump() && PlayerInputManager.MainInstance._jump)
-                {
-                    PlayerFSM.MainInstance.SetState(StateType.WalkJump);
-                }
+                return;
             }
             if (movementController.isDash)
             {
                 PlayerFSM.MainInstance.SetState(StateType.Dash);
+                return;
             }
             if (movementController.isSprint)
             {
                 PlayerFSM.MainInstance.SetState(StateType.Sprint);
-                if (movementController.CanJump() && PlayerInputManager.MainInstance._jump)
-                {
-                    PlayerFSM.MainInstance.SetState(StateType.SprintJump);
-                }
+                return;
             }
-            if (movementController.animator.GetBool("IsRun"))
+            if (!movementController.isWalk)
             {
                 PlayerFSM.MainInstance.SetState(StateType.Run);
-                if (movementController.CanJump() && PlayerInputManager.MainInstance._jump)
-                {
-                    PlayerFSM.MainInstance.SetState(StateType.RunJump);
-                }
+                return;
             }
         }
         else
