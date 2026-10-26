@@ -818,7 +818,7 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: e35cb0f8e7367104496bee1bf41e86b2,
         type: 3}
       insertIndex: -1
-      addedObject: {fileID: 1408726194}
+      addedObject: {fileID: 1408726199}
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: e35cb0f8e7367104496bee1bf41e86b2,
         type: 3}
       insertIndex: -1
@@ -1860,12 +1860,12 @@ PrefabInstance:
     - target: {fileID: 8642225304373351647, guid: 50a0925b0c22af146a2d15615f815a1c,
         type: 3}
       propertyPath: m_LocalScale.y
-      value: 1.003
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8642225304373351647, guid: 50a0925b0c22af146a2d15615f815a1c,
         type: 3}
       propertyPath: m_LocalScale.z
-      value: 1.6664144
+      value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 8642225304373351647, guid: 50a0925b0c22af146a2d15615f815a1c,
         type: 3}
@@ -1875,7 +1875,7 @@ PrefabInstance:
     - target: {fileID: 8642225304373351647, guid: 50a0925b0c22af146a2d15615f815a1c,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.8
+      value: 1.73
       objectReference: {fileID: 0}
     - target: {fileID: 8642225304373351647, guid: 50a0925b0c22af146a2d15615f815a1c,
         type: 3}
@@ -4487,13 +4487,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1341698039}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.25797603, y: 0, z: 0, w: 0.96615136}
-  m_LocalPosition: {x: 3, y: 2.0000002, z: 28}
+  m_LocalRotation: {x: -0.089821115, y: -0, z: -0, w: 0.9959579}
+  m_LocalPosition: {x: 3, y: 0.93, z: 31.77}
   m_LocalScale: {x: 2.8398, y: 1, z: 21.59289}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: -29.9, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: -10.307, y: 0, z: 0}
 --- !u!1 &1403164491
 GameObject:
   m_ObjectHideFlags: 0
@@ -4709,6 +4709,9 @@ MonoBehaviour:
   sprintTime: 0.25
   keepDashTime: 0.8
   currentDashTime: 0
+  landingBufferDuration: 0.2
+  landingBufferTimer: 0
+  isLanded: 0
   Feet: 0
   characterHeight: 0
   fallDeltaTime: 0
@@ -4786,7 +4789,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   healthInfo: {fileID: 11400000, guid: a5e923e567bafbf48a7718a062b67648, type: 2}
   healthUI: {fileID: 724881717}
---- !u!114 &1408726194
+--- !u!114 &1408726199
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -4795,37 +4798,58 @@ MonoBehaviour:
   m_GameObject: {fileID: 192961598}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 8b398a25154dd8c4088aa15f45d2072d, type: 3}
+  m_Script: {fileID: 11500000, guid: 0aac20d2ee51d964f961a731eb11084f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  showDebugGizmos: 1
-  enableFeetIK: 1
-  environmentLayer:
+  actorRoot: {fileID: 0}
+  poseRoot: {fileID: 0}
+  characterController: {fileID: 0}
+  ikLayer: 0
+  leftState: LeftFootState
+  rightState: RightFootState
+  leftDownTime: LeftFootDownTime
+  rightDownTime: RightFootDownTime
+  contactThreshold: 0.5
+  groundedParameter: isGround
+  locomotionTag: Move
+  dashTag: Dash
+  attackTag: Attack
+  hitTag: Hit
+  minimumPredictionSpeed: 0.1
+  landingTraditionalSeconds: 0.15
+  traditionalDuringTransitions: 1
+  timeCurveUsesClipSeconds: 1
+  strideScale: 1
+  reusePredictionDistance: 0.03
+  maximumPredictionSeconds: 2
+  groundMask:
     serializedVersion: 2
     m_Bits: 576
-  footOffsetY: 0.08
-  raycastDistance: 1
-  maxStepHeight: 0.4
-  footRadius: 0.15
-  footPositionSpeed: 15
-  footRotationSpeed: 15
-  pelvisUpSpeed: 5
-  pelvisDownSpeed: 5
-  maxPelvisDrop: 0.35
-  footHeightTolerance: 0.1
-  enableSpineBend: 1
-  spineBendMultiplier: 100
-  maxSpineBendAngle: 40
-  spineBendSpeed: 4
-  enableHeadLook: 1
-  lookAheadDistance: 2
-  headLookSpeed: 5
-  headWeight: 0.7
-  lookUpThreshold: 0.2
-  lookUpMultiplier: 0.4
-  lookDownMultiplier: 1.2
-  maxDropLimit: 1.5
-  maxWallLimit: 1.5
+  footHeight: 0.08
+  probeUp: 0.65
+  probeDown: 1.2
+  maximumGroundSlope: 65
+  maximumPathInsertions: 12
+  pathMiddleLift: 0.2
+  uphillLateLift: 0.2
+  runningPathLift: 0
+  runSpeedThreshold: 2.5
+  runningAnimationLiftOnSlope: 0.5
+  slopeHeightThreshold: 0.04
+  walkingHeightSpeed: 16
+  runningHeightSpeed: 24
+  downwardSpeedMultiplier: 1.5
+  plantedPositionSpeed: 30
+  ikBlendSpeed: 15
+  reconstructBody: 1
+  bodySmoothTime: 0.08
+  maximumBodyOffset: 0.45
+  stairMode: 0
+  ascendingBodyDrop: 0.05
+  descendingBodyDrop: 0.08
+  alignPlantedFeet: 1
+  rotationSpeed: 20
+  drawGizmos: 1
 --- !u!1 &1483040732
 GameObject:
   m_ObjectHideFlags: 0
@@ -5308,7 +5332,7 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 629eb7915aca8d44da17c58ccfd62637,
         type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 629eb7915aca8d44da17c58ccfd62637,
         type: 3}
