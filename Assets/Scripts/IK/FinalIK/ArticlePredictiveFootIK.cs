@@ -91,6 +91,11 @@ namespace ArticleFootIK
         [Min(0.01f)] public float rotationSpeed = 20f;
         public bool drawGizmos = true;
 
+        [Header("转向时暂时关闭 IK")]
+        [Tooltip("角色水平转向速度超过阈值时，暂时释放双脚 IK，避免旧落脚点在转向过程中继续约束角色。")]
+        public bool disableIKDuringTurn = true;
+        [Min(0f)] public float turnAngularSpeedThreshold = 45f;
+
         public Vector3 HorizontalVelocity { get; private set; }
         public bool PredictionActive { get; private set; }
         public float TargetVirtualRootHeight { get; private set; }
@@ -121,6 +126,8 @@ namespace ArticleFootIK
         private int groundedId;
         private bool hasGroundedParameter, wasGrounded, wasPredicting, havePosition;
         private Vector3 previousActorPosition;
+        private Vector3 previousActorForward;
+        private bool haveActorForward;
         private float landingTimer, bodyOffset, bodyVelocity, elapsed;
         private float startedAt;
         private int callbackCount;
@@ -167,6 +174,7 @@ namespace ArticleFootIK
             if (left != null) { left.ResetPrediction(); left.smoothed = false; left.rotationReady = false; left.weight = 0f; }
             if (right != null) { right.ResetPrediction(); right.smoothed = false; right.rotationReady = false; right.weight = 0f; }
             havePosition = false;
+            haveActorForward = false;
             wasPredicting = wasGrounded = stepSelectionReady = stepValid = false;
             bodyOffset = bodyVelocity = landingTimer = 0f;
             PredictionActive = false;
@@ -234,6 +242,40 @@ namespace ArticleFootIK
             previousActorPosition = actorRoot.position;
             havePosition = true;
             HorizontalVelocity = Vector3.ProjectOnPlane(externalMotion ? suppliedVelocity : measured, Vector3.up);
+
+            // 用 Actor 的水平 forward 变化检测转向。转向期间释放 IK，避免旧的世界落脚点
+            // 继续约束角色，造成脚被“钉住”或拖拽。转向结束后会重新建立落脚参考。
+            Vector3 currentActorForward = Vector3.ProjectOnPlane(actorRoot.forward, Vector3.up);
+            bool validActorForward = currentActorForward.sqrMagnitude > 0.000001f;
+            bool turning = false;
+            if (validActorForward)
+            {
+                currentActorForward.Normalize();
+                if (disableIKDuringTurn && haveActorForward && elapsed > 0f)
+                {
+                    float angularSpeed = Mathf.Abs(Vector3.SignedAngle(
+                        previousActorForward, currentActorForward, Vector3.up)) / elapsed;
+                    turning = angularSpeed >= turnAngularSpeedThreshold;
+                }
+                previousActorForward = currentActorForward;
+                haveActorForward = true;
+            }
+            if (turning)
+            {
+                left.ResetPrediction();
+                right.ResetPrediction();
+                left.smoothed = right.smoothed = false;
+                left.rotationReady = right.rotationReady = false;
+                bodyOffset = bodyVelocity = 0f;
+                wasPredicting = false;
+                stepSelectionReady = false;
+                stepValid = false;
+                PredictionActive = false;
+                ClearIK(left);
+                ClearIK(right);
+                Status = "转向中：已暂时关闭 IK";
+                return;
+            }
 
             AnimatorStateInfo state = animator.GetCurrentAnimatorStateInfo(ikLayer);
             float rate = externalMotion ? suppliedPlaybackRate : animator.speed * state.speed * state.speedMultiplier;
