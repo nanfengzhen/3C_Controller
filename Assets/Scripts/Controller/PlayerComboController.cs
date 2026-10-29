@@ -5,10 +5,10 @@ using UnityEngine;
 
 public class PlayerComboController : PlayerComboControllerBase
 {
-    //1.Ê×ÏÈÎÒÃÇÒª´«Èë×éºÏ¼¼£¬ÆÕÍ¨×éºÏ¼¼£¬ÖØ»÷×éºÏ¼¼
-    //2£¬ÎÒÃÇµ±Ç°µÄ×éºÏ¼¼
+    //1.ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Òªï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¼ï¿½ï¿½ï¿½ï¿½ï¿½Í¨ï¿½ï¿½Ï¼ï¿½ï¿½ï¿½ï¿½Ø»ï¿½ï¿½ï¿½Ï¼ï¿½
+    //2ï¿½ï¿½ï¿½ï¿½ï¿½Çµï¿½Ç°ï¿½ï¿½ï¿½ï¿½Ï¼ï¿½
 
-    [SerializeField, Header("ÖØ»÷×éºÏ¼¼")] private CharacterComboSO heavyCombo;
+    [SerializeField, Header("ï¿½Ø»ï¿½ï¿½ï¿½Ï¼ï¿½")] private CharacterComboSO heavyCombo;
 
 
 
@@ -32,11 +32,11 @@ public class PlayerComboController : PlayerComboControllerBase
         base.Update();
         //CharacterBaseAttackInput();
         //UpdateDetectDirection(); 
-        MatchPosition();//matchtarget·ÅÔÚ²¥·Å´¦¾ö¶¯»­Ö®Ç°
+        MatchPosition();//matchtargetï¿½ï¿½ï¿½Ú²ï¿½ï¿½Å´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö®Ç°
     }
 
 
-    //ÔÚ´¥·¢´¦¾öÊ±£¬Æ«ÒÆÁ¿
+    //ï¿½Ú´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½Æ«ï¿½ï¿½ï¿½ï¿½
 
 
     protected override void MatchPosition()
@@ -47,27 +47,26 @@ public class PlayerComboController : PlayerComboControllerBase
         if (DevelopmentToos.DistanceForTarget(currentEnemy, transform) > 1f) return;
         if (animator.GetCurrentAnimatorStateInfo(0).IsTag("Finish"))
         {
-            transform.rotation = Quaternion.LookRotation(-currentEnemy.forward);    //Ê¹µÃµÐÈËÓëÎÒÃæ¶ÔÃæ
+            transform.rotation = Quaternion.LookRotation(-currentEnemy.forward);    //Ê¹ï¿½Ãµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
             RunningMatching(currentCombo, currentComboIndex);
         }
     }
 
 
 
-    #region Íæ¼Ò»ù´¡¹¥»÷
+    #region ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
-    #region ½ÇÉ«µÄÆÕÍ¨¹¥»÷
+    #region ï¿½ï¿½É«ï¿½ï¿½ï¿½ï¿½Í¨ï¿½ï¿½ï¿½ï¿½
 
     private bool CanBaseAttackInput()
     {
-        /*Èç¹ûÔÚ¹¥»÷
-        *Èç¹ûÔÚ¸ñµ²
-        *Èç¹ûÔÚ´¦¾öµÐÈË
+        /*ï¿½ï¿½ï¿½ï¿½Ú¹ï¿½ï¿½ï¿½
+        *ï¿½ï¿½ï¿½ï¿½Ú¸ï¿½
+        *ï¿½ï¿½ï¿½ï¿½Ú´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         */
         if (!canAttack) return false;
         if (animator.GetCurrentAnimatorStateInfo(0).IsTag("Hit")) return false;
         if (animator.GetCurrentAnimatorStateInfo(0).IsTag("Parry")) return false;
-        if (animator.GetCurrentAnimatorStateInfo(0).IsTag("Dash")) return false;
         if (animator.GetCurrentAnimatorStateInfo(0).IsTag("Finish")) return false;
         return true;
 
@@ -76,28 +75,28 @@ public class PlayerComboController : PlayerComboControllerBase
 
 
 
-    #region Íæ¼Ò¹¥»÷ÊäÈë
+    #region ï¿½ï¿½Ò¹ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
     public override void CharacterBaseAttackInput()
     {
         
-        //Èç¹û²»ÄÜ¹¥»÷
+        //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ü¹ï¿½ï¿½ï¿½
         if (!CanBaseAttackInput() || !canAttack) return;
         if (PlayerInputManager.MainInstance._attack)
         {
-            //ÅÐ¶Ïµ±Ç°µÄ¹¥»÷ÊÇ·ñÎª¿Õ»ò»ù´¡×éºÏ¼¼
+            //ï¿½Ð¶Ïµï¿½Ç°ï¿½Ä¹ï¿½ï¿½ï¿½ï¿½Ç·ï¿½Îªï¿½Õ»ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¼ï¿½
 
             if (currentCombo == null || currentCombo != baseCombo)
             {
                 ChangeAttackCombo(baseCombo);
-                ResetCombo();   //ÖØÖÃ¹¥»÷ 
+                ResetCombo();   //ï¿½ï¿½ï¿½Ã¹ï¿½ï¿½ï¿½ 
             }
 
-            //Èç¹û²»¿Õ£¬¾ÍÖ´ÐÐ×éºÏ¼¼
+            //ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Õ£ï¿½ï¿½ï¿½Ö´ï¿½ï¿½ï¿½ï¿½Ï¼ï¿½
             ExecuteAction();
         }
         else if (PlayerInputManager.MainInstance.rightAttack)
         {
-            Debug.Log("½øÀ´¶öÁË");
+            Debug.Log("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½");
             ChangeAttackCombo(heavyCombo);
             ExecuteAction();
             attackCount = 0;
