@@ -42,17 +42,16 @@ public abstract class PlayerComboControllerBase :MonoBehaviour
 
     protected virtual void Update()
     {
+        GetNearUnits();
+        GetOneEnemyUnit();
+        ClearEnemy();
+        CheckEnemyIsDie();
         MatchPosition();
         LookAtTarget();
         OnEndAttack();
-        GetNearUnits();
-        ClearEnemy();
-        CheckEnemyIsDie();
     }
-    private void FixedUpdate()  //执行在Update之后
+    private void FixedUpdate()
     {
-        //DetectTarget();
-        GetOneEnemyUnit();
     }
 
     #region 检测敌人是否死亡,移除敌人
@@ -85,8 +84,6 @@ public abstract class PlayerComboControllerBase :MonoBehaviour
     //3.自选：(1)当前有目标，不再更新目标，知道当前目标小时或者距离太远
     private void GetNearUnits()
     {
-        if (animator.GetFloat("Speed") > 0.7f) return;
-        if (currentEnemy != null && DevelopmentToos.DistanceForTarget(currentEnemy, transform) < 1.5f) return;
         //if (animator.GetFloat("Speed") > 0.7f) return;
         Units = Physics.OverlapSphere((transform.position) + transform.up * 0.7f,
         detectionRange, enemyLayer, QueryTriggerInteraction.Ignore);
@@ -95,15 +92,11 @@ public abstract class PlayerComboControllerBase :MonoBehaviour
 
     private void GetOneEnemyUnit()
     {
-        if (currentEnemy != null && DevelopmentToos.DistanceForTarget(currentEnemy, transform) > 1.5f)
+        if (Units == null || Units.Length == 0)
         {
             currentEnemy = null;
             return;
-        } 
-        if (Units.Length == 0 || Units == null) return;//当前附近没有敌人
-        if (currentEnemy != null && DevelopmentToos.DistanceForTarget(currentEnemy, transform) < 1.5f) return;   //如果当前有敌人，就不再查找(当前距离小于1.5)
-        if (animator.GetCurrentAnimatorStateInfo(0).IsTag("Finish")) return;
-        if (animator.GetFloat("Speed") > 0.7f) return;
+        }
         float distance = Mathf.Infinity;
         Transform temp_enemy = null;
 
@@ -126,7 +119,7 @@ public abstract class PlayerComboControllerBase :MonoBehaviour
     private void ClearEnemy()
     {
         if (currentEnemy == null) return;
-        if (animator.GetFloat("Speed") > 1f)
+        if (DevelopmentToos.DistanceForTarget(currentEnemy, transform) > detectionRange)
         {
             currentEnemy = null;
         }

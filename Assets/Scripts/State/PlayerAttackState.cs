@@ -6,7 +6,7 @@ using UnityEngine.InputSystem.Controls;
 
 public class PlayerAttackState : PlayerStateBase
 {
-    // é˜²æ­¢æ”»å‡»è¿›å…¥æ—¶ä»æŒ‰ä½çš„æ–¹å‘è¾“å…¥ç«‹å³æ‰“æ–­æ”»å‡»ã€‚
+    // ·ÀÖ¹¹¥»÷½øÈëÊ±ÈÔ°´×¡µÄ·½ÏòÊäÈëÁ¢¼´´ò¶Ï¹¥»÷¡£
     private bool moveInputReleasedSinceAttack;
     public PlayerAttackState(PlayerMovementController movementController,PlayerComboController comboController) : base(movementController,comboController)
     {
@@ -25,7 +25,7 @@ public class PlayerAttackState : PlayerStateBase
     }
 
     /// <summary>
-    /// éœ€è¦æ¸…ç©ºåœ¨Attackçš„ä¸€äº›çŠ¶æ€
+    /// ĞèÒªÇå¿ÕÔÚAttackµÄÒ»Ğ©×´Ì¬
     /// </summary>
     public override void OnExit()
     {
@@ -38,12 +38,12 @@ public class PlayerAttackState : PlayerStateBase
     {
         if (PlayerInputManager.MainInstance._attack || PlayerInputManager.MainInstance.rightAttack)
         {
-            Debug.Log("è¿›å…¥æ”»å‡»çŠ¶æ€");
+            Debug.Log("½øÈë¹¥»÷×´Ì¬");
             comboController.CharacterBaseAttackInput();
             return;
         }
 
-        // è¿›å…¥æ”»å‡»æ—¶æŒ‰ä½çš„æ–¹å‘é”®ä¸ç®—æ–°çš„ç§»åŠ¨è¾“å…¥ï¼Œå¿…é¡»å…ˆæ¾å¼€å†é‡æ–°æŒ‰ä¸‹ã€‚
+        // ½øÈë¹¥»÷Ê±°´×¡µÄ·½Ïò¼ü²»ËãĞÂµÄÒÆ¶¯ÊäÈë£¬±ØĞëÏÈËÉ¿ªÔÙÖØĞÂ°´ÏÂ¡£
         if (!movementController.HasMoveInput)
         {
             moveInputReleasedSinceAttack = true;
@@ -111,7 +111,7 @@ public class PlayerAttackState : PlayerStateBase
             return;
         }
 
-        // æ”»å‡»åŠ¨ç”»ç»“æŸä½†æ–¹å‘ä»è¢«æŒ‰ä½æ—¶ï¼Œå…ˆé‡Šæ”¾æ”»å‡»åŠ¨ç”»å‚æ•°ï¼Œé¿å… IdleState ä¸‹ä¸€å¸§è‡ªåŠ¨åˆ‡å›è·‘æ­¥ã€‚
+        // ¹¥»÷¶¯»­½áÊøµ«·½ÏòÈÔ±»°´×¡Ê±£¬ÏÈÊÍ·Å¹¥»÷¶¯»­²ÎÊı£¬±ÜÃâ IdleState ÏÂÒ»Ö¡×Ô¶¯ÇĞ»ØÅÜ²½¡£
         if (movementController.HasMoveInput)
         {
             movementController.ExitState(StateType.Attack);

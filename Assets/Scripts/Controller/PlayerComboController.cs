@@ -5,10 +5,10 @@ using UnityEngine;
 
 public class PlayerComboController : PlayerComboControllerBase
 {
-    //1.��������Ҫ������ϼ�����ͨ��ϼ����ػ���ϼ�
-    //2�����ǵ�ǰ����ϼ�
+    //1.???????????????????????????????????
+    //2??????????????
 
-    [SerializeField, Header("�ػ���ϼ�")] private CharacterComboSO heavyCombo;
+    [SerializeField, Header("???????")] private CharacterComboSO heavyCombo;
 
 
 
@@ -32,11 +32,11 @@ public class PlayerComboController : PlayerComboControllerBase
         base.Update();
         //CharacterBaseAttackInput();
         //UpdateDetectDirection(); 
-        MatchPosition();//matchtarget���ڲ��Ŵ�������֮ǰ
+        MatchPosition();//matchtarget????????????????
     }
 
 
-    //�ڴ�������ʱ��ƫ����
+    //?????????????????
 
 
     protected override void MatchPosition()
@@ -47,22 +47,22 @@ public class PlayerComboController : PlayerComboControllerBase
         if (DevelopmentToos.DistanceForTarget(currentEnemy, transform) > 1f) return;
         if (animator.GetCurrentAnimatorStateInfo(0).IsTag("Finish"))
         {
-            transform.rotation = Quaternion.LookRotation(-currentEnemy.forward);    //ʹ�õ������������
+            transform.rotation = Quaternion.LookRotation(-currentEnemy.forward);    //???????????????
             RunningMatching(currentCombo, currentComboIndex);
         }
     }
 
 
 
-    #region ��һ�������
+    #region ??????????
 
-    #region ��ɫ����ͨ����
+    #region ????????????
 
     private bool CanBaseAttackInput()
     {
-        /*����ڹ���
-        *����ڸ�
-        *����ڴ�������
+        /*????????
+        *??????
+        *????????????
         */
         if (!canAttack) return false;
         if (animator.GetCurrentAnimatorStateInfo(0).IsTag("Hit")) return false;
@@ -75,28 +75,28 @@ public class PlayerComboController : PlayerComboControllerBase
 
 
 
-    #region ��ҹ�������
+    #region ??????????
     public override void CharacterBaseAttackInput()
     {
         
-        //������ܹ���
+        //??????????
         if (!CanBaseAttackInput() || !canAttack) return;
         if (PlayerInputManager.MainInstance._attack)
         {
-            //�жϵ�ǰ�Ĺ����Ƿ�Ϊ�ջ������ϼ�
+            //?��??????????????????????
 
             if (currentCombo == null || currentCombo != baseCombo)
             {
                 ChangeAttackCombo(baseCombo);
-                ResetCombo();   //���ù��� 
+                ResetCombo();   //???��??? 
             }
 
-            //������գ���ִ����ϼ�
+            //?????????????????
             ExecuteAction();
         }
         else if (PlayerInputManager.MainInstance.rightAttack)
         {
-            Debug.Log("��������");
+            Debug.Log("????????");
             ChangeAttackCombo(heavyCombo);
             ExecuteAction();
             attackCount = 0;
