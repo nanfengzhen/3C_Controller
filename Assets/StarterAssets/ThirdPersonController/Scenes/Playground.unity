@@ -4815,6 +4815,7 @@ MonoBehaviour:
   dashTag: Dash
   attackTag: Attack
   hitTag: Hit
+  landing: Landing
   minimumPredictionSpeed: 0.1
   landingTraditionalSeconds: 0.15
   traditionalDuringTransitions: 1
@@ -4850,6 +4851,8 @@ MonoBehaviour:
   alignPlantedFeet: 1
   rotationSpeed: 20
   drawGizmos: 1
+  disableIKDuringTurn: 1
+  turnAngularSpeedThreshold: 45
 --- !u!1 &1483040732
 GameObject:
   m_ObjectHideFlags: 0
@@ -5220,7 +5223,7 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 629eb7915aca8d44da17c58ccfd62637,
         type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 629eb7915aca8d44da17c58ccfd62637,
         type: 3}
@@ -5332,7 +5335,7 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 629eb7915aca8d44da17c58ccfd62637,
         type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 919132149155446097, guid: 629eb7915aca8d44da17c58ccfd62637,
         type: 3}

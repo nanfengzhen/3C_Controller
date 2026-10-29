@@ -37,6 +37,7 @@ namespace ArticleFootIK
         public string dashTag = "Dash";
         public string attackTag = "Attack";
         public string hitTag = "Hit";
+        public string landing = "Landing";
 
 
 
@@ -282,7 +283,7 @@ namespace ArticleFootIK
             if (grounded && !wasGrounded) landingTimer = landingTraditionalSeconds;
             else landingTimer = Mathf.Max(0f, landingTimer - elapsed);
             bool allowed = externalMotion ? suppliedPredictionAllowed :
-                state.loop && (string.IsNullOrEmpty(locomotionTag) || state.IsTag(locomotionTag) || state.IsTag(dashTag) || state.IsTag(attackTag) || state.IsTag(hitTag));
+                state.loop && (string.IsNullOrEmpty(locomotionTag) || state.IsTag(locomotionTag));
             bool predicting = grounded && allowed && landingTimer <= 0f && rate > 0f &&
                 HorizontalVelocity.magnitude >= minimumPredictionSpeed &&
                 !(traditionalDuringTransitions && animator.IsInTransition(ikLayer));
@@ -293,7 +294,7 @@ namespace ArticleFootIK
             wasPredicting = predicting;
             wasGrounded = grounded;
             PredictionActive = predicting;
-            if (!grounded || state.IsTag(dashTag) || state.IsTag(attackTag) || state.IsTag(hitTag))
+            if (!grounded || state.IsTag(dashTag) || state.IsTag(attackTag) || state.IsTag(hitTag) || state.IsTag(landing))
             {
                 // [S17] 空中清掉历史；不在空中继续拉脚到旧地面。
                 bodyOffset = bodyVelocity = 0f;

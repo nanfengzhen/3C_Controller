@@ -209,11 +209,12 @@ public class PlayerMovementController :PlayerControllerBase
         }
     }
 
+    //通过播放的动画改变参数
     public void SetAnimatorParametersByState(StateType state)
     {
         bool hasInput = HasMoveInput;
         float speed = 0f;
-        bool isRun = false;
+        bool isRun = true;
 
         switch (state)
         {
@@ -255,7 +256,7 @@ public class PlayerMovementController :PlayerControllerBase
     {
         if (isLanded) return;
         landingBufferTimer += deltaTime;
-        if (landingBufferTimer >= landingBufferDuration)
+        if (landingBufferTimer >= landingBufferDuration)    //达到缓冲完毕的时间
         {
             isLanded = true;
             animator.SetBool("isLanded", true);
@@ -316,6 +317,8 @@ public class PlayerMovementController :PlayerControllerBase
         }
     }
 
+
+    //更新animator参数->改变动画状态
     private void UpdatePlayerMoveState()
     {
         float targetSpeed = 0f;
